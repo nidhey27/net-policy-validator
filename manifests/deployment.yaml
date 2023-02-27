@@ -18,7 +18,7 @@ spec:
         app: netpolval
     spec:
       containers:
-      - image: nidhey27/val-controller:0.0.16
+      - image: nidhey27/pod-label-validator:0.0.10
         name: val-controller
         args:
         - --tls-cert-file=/var/run/webhook/serving-cert/tls.crt

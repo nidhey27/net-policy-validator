@@ -135,6 +135,10 @@ func ServeCRValidation(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("ServeCRValidation was called")
 	body, err := ioutil.ReadAll(r.Body)
 
+	if err != nil {
+		log.Printf("ERROR[Reading Body] %s\n", err.Error())
+	}
+
 	// Read body and get instance of admissionReview object
 	decoder := codecs.UniversalDeserializer()
 
@@ -151,24 +155,24 @@ func ServeCRValidation(w http.ResponseWriter, r *http.Request) {
 
 	// convert cr spec from admission review object
 	gvk_cr := admv1beta1.SchemeGroupVersion.WithKind("Pod")
-	var br corev1.Pod
-	_, _, err = decoder.Decode(admissionReview.Request.Object.Raw, &gvk_cr, &br)
+	var pod corev1.Pod
+	_, _, err = decoder.Decode(admissionReview.Request.Object.Raw, &gvk_cr, &pod)
 
 	if err != nil {
 		log.Printf("ERROR[Converting Admission Req Raw Obj to POD Type] %s\n", err.Error())
 	}
 
-	fmt.Printf("POD that we have is %+v\n", br)
+	// fmt.Printf("POD that we have is %+v\n", pod)
 	c := newController(config)
 
-	allow, err := validateRequest(c)
+	allow, err := validateRequest(c, pod)
 	var resp admv1beta1.AdmissionResponse
-	if !allow || err != nil {
+	if err != nil {
 		resp = admv1beta1.AdmissionResponse{
 			UID:     admissionReview.Request.UID,
 			Allowed: allow,
 			Result: &v1.Status{
-				Message: "",
+				Message: err.Error(),
 			},
 		}
 	} else {
@@ -195,7 +199,11 @@ func ServeCRValidation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func validateRequest(c *Controller) (bool, error) {
-	c.checkPodLabels()
-	return false, nil
+func validateRequest(c *Controller, pod corev1.Pod) (bool, error) {
+	err := c.checkPodLabels(pod)
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
