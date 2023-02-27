@@ -196,6 +196,6 @@ func ServeCRValidation(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateRequest(c *Controller) (bool, error) {
-
+	c.checkPodLabels()
 	return false, nil
 }
