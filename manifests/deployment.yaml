@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: netpolval
+  name: netpolval
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netpolval
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: netpolval
+    spec:
+      containers:
+      - image: nidhey27/pod-label-validator:0.0.10
+        name: val-controller
+        args:
+        - --tls-cert-file=/var/run/webhook/serving-cert/tls.crt
+        - --tls-private-key-file=/var/run/webhook/serving-cert/tls.key
+        - --v=4
+        resources: {}
+        volumeMounts:
+          - name: serving-cert
+            mountPath: /var/run/webhook/serving-cert
+      volumes:
+        - name: serving-cert
+          secret:
+            secretName: certs-1
+      serviceAccountName: valcon-1-sa
+status: {}
